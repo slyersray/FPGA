@@ -1,0 +1,7 @@
+`include "reset.sv"
+`include "aes256_ecb_16.sv"
+`include "aes256_ctr_16.sv"
+`include "aes256_ecb_128.sv"
+`include "sm4_ecb_16.sv"
+`include "sm4_ctr_16.sv"
+`include "suite.sv"
