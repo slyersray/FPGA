@@ -550,6 +550,18 @@ module tb_crypto_top;
 
     `include "case/all.sv"
 
+`ifdef VCS
+    string fsdb_file;
+    initial begin
+        if (!$value$plusargs("FSDB=%s", fsdb_file))
+            fsdb_file = "crypto.fsdb";
+        $fsdbDumpfile(fsdb_file);
+        $fsdbDumpvars(0);
+        $fsdbDumpMDA();
+        $display("FSDB %s", fsdb_file);
+    end
+`endif
+
     initial begin
         cycle = 0;
         n_fail = 0;
@@ -579,6 +591,9 @@ module tb_crypto_top;
             $fatal(1);
         end
         $display("%s 通过", test_name);
+`ifdef VCS
+        $fsdbDumpflush;
+`endif
         $finish;
     end
 endmodule

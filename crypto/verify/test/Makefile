@@ -57,7 +57,7 @@ run: $(BIN)
 	esac
 	rm -rf $(RESULTS)
 	mkdir -p $(RESULTS)
-	$(BIN) +TEST=$(TEST) +RESULTS=$(RESULTS)
+	$(BIN) +TEST=$(TEST) +RESULTS=$(RESULTS) $(if $(filter vcs,$(TOOL)),+FSDB=$(WORK)/crypto.fsdb,)
 
 list:
 	@printf '%s\n' $(TESTS)
@@ -86,15 +86,19 @@ $(BIN): $(OSSL)/lib/libcrypto.a $(TB_SV) $(DPI_C) $(RTL_SRCS) $(CASE_SV)
 		$(RTL_SRCS) $(TB_SV) $(DPI_C) $(OSSL)/lib/libcrypto.a
 else
 $(BIN): $(OSSL)/lib/libcrypto.a $(TB_SV) $(DPI_C) $(RTL_SRCS) $(CASE_SV)
+	@if [ -z "$(VERDI_HOME)" ]; then \
+		echo "FSDB 需要在编译前设置 VERDI_HOME，例如 export VERDI_HOME=/tools/eda/verdi/W-2024.09-SP2"; \
+		exit 1; \
+	fi
 	mkdir -p $(WORK)/vcs
-	$(VCS) -full64 -sverilog -timescale=1ns/1ps \
+	$(VCS) -full64 -sverilog -timescale=1ns/1ps -debug_access+all \
 		+incdir+$(RTL) \
 		+incdir+$(TEST_DIR) \
 		+incdir+$(TEST_DIR)/case \
 		-o $(BIN) \
 		-Mdir=$(WORK)/vcs/csrc \
 		-CFLAGS "-O1 -I$(OSSL)/include" \
-		-LDFLAGS "$(OSSL)/lib/libcrypto.a -ldl -lpthread" \
+		-LDFLAGS "-L$(OSSL)/lib -Xlinker --whole-archive -lcrypto -Xlinker --no-whole-archive -ldl -lpthread -lm" \
 		$(RTL_SRCS) $(TB_SV) $(DPI_C)
 endif
 

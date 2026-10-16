@@ -68,7 +68,19 @@ module crypto_stream #(
 
     integer si;
     reg any_sb;
+    reg [1023:0] assembled;
     wire [4:0] tap;
+
+    function automatic [127:0] prefix_keep;
+        input [7:0] len;
+        integer ki;
+        begin
+            prefix_keep = 128'h0;
+            for (ki = 0; ki < 128; ki = ki + 1)
+                if (ki < len)
+                    prefix_keep[127 - ki] = 1'b1;
+        end
+    endfunction
 
     aes256_key_expand u_aes_kex (
         .key(key_q),
@@ -145,17 +157,6 @@ module crypto_stream #(
             for (ki = 0; ki < 128; ki = ki + 1)
                 if (keep[127 - ki])
                     keep_len = keep_len + 8'd1;
-        end
-    endfunction
-
-    function automatic [127:0] prefix_keep;
-        input [7:0] len;
-        integer ki;
-        begin
-            prefix_keep = 128'h0;
-            for (ki = 0; ki < 128; ki = ki + 1)
-                if (ki < len)
-                    prefix_keep[127 - ki] = 1'b1;
         end
     endfunction
 
@@ -340,7 +341,6 @@ module crypto_stream #(
     endfunction
 
     integer ai, aj, apos;
-    reg [1023:0] assembled;
     reg [1023:0] dout_touch;
     reg [127:0] ks;
     reg [4:0] nb;
